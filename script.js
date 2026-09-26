@@ -142,7 +142,7 @@ submitReceipt.addEventListener("click", async () => {
     if(uploadError) throw new Error(uploadError.message || "Receipt upload failed.");
 
     // Store the student registration and the private receipt path.
-    const { error: insertError } = await supabaseClient
+    const { data: registration, error: insertError } = await supabaseClient
       .from("registrations")
       .insert({
         full_name: fullName.value.trim(),
@@ -150,12 +150,35 @@ submitReceipt.addEventListener("click", async () => {
         email: emailAddress.value.trim() || null,
         receipt_path: receiptPath,
         payment_status: "receipt_submitted"
-      });
+      })
+      .select("id")
+      .single();
 
     if(insertError){
       // Best-effort cleanup if the database insert fails after the file upload.
       await supabaseClient.storage.from("payment-receipts").remove([receiptPath]);
       throw new Error(insertError.message || "Registration could not be saved.");
+    }
+
+    // Notify the registration inbox after the student and receipt are safely saved.
+    // The Resend API key stays server-side inside the Supabase Edge Function.
+    const { data: notification, error: notificationError } = await supabaseClient.functions.invoke(
+      "notify-sana-registration",
+      {
+        body: {
+          full_name: fullName.value.trim(),
+          whatsapp: whatsappNumber.value.trim(),
+          email: emailAddress.value.trim() || null,
+          receipt_path: receiptPath,
+          registration_id: registration?.id || null
+        }
+      }
+    );
+
+    if(notificationError || notification?.success === false){
+      // Do not undo a valid registration just because email notification failed.
+      // The registration remains saved in Supabase for review.
+      console.error("Registration notification failed:", notificationError || notification);
     }
 
     uploadStatus.textContent = "Registration submitted successfully.";
