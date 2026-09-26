@@ -7,7 +7,7 @@ const SUPABASE_URL =
   "https://uxoshrxqseumyfmhvxmh.supabase.co";
 
 const SUPABASE_ANON_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV4b3NoHnhxc2V1bXlmbWh2eG1oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0MTEzMDgsImV4cCI6MjEwNTk4NzMwOH0.8qhdGGlwJ8rqFkLcuxh1eXnPOlhIYERZzOK_YBosDlo";
+  "sb_publishable_EPd4I6B1_iQI5d2Yubw1pg_0KnyPOIx";
 
 const NOTIFICATION_FUNCTION =
   `${SUPABASE_URL}/functions/v1/notify-sana-registration`;
