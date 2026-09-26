@@ -1,808 +1,1000 @@
 // ============================================
-// SÀNA STYLES — REGISTRATION SYSTEM
+// SÀNA STYLES REGISTRATION SYSTEM
+// GitHub Pages + Supabase + Resend
 // ============================================
 
-// Supabase configuration
-const SUPABASE_URL = "https://uxoshrxqseumyfmhvxmh.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV4b3Nocnhxc2V1bXlmbWh2eG1oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0MTEzMDgsImV4cCI6MjEwNTk4NzMwOH0.8qhdGGlwJ8rqFkLcuxh1eXnPOlhIYERZzOK_YBosDlo";
+const SUPABASE_URL =
+  "https://uxoshrxqseumyfmhvxmh.supabase.co";
 
-const supabaseClient = window.supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_ANON_KEY
-);
+const SUPABASE_ANON_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV4b3NoHnhxc2V1bXlmbWh2eG1oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0MTEzMDgsImV4cCI6MjEwNTk4NzMwOH0.8qhdGGlwJ8rqFkLcuxh1eXnPOlhIYERZzOK_YBosDlo";
 
-// Supabase Edge Function
 const NOTIFICATION_FUNCTION =
   `${SUPABASE_URL}/functions/v1/notify-sana-registration`;
 
-// Registration deadline
 const REGISTRATION_DEADLINE =
-  new Date("2026-10-20T00:00:00+01:00").getTime();
+  new Date("2026-10-20T00:00:00+01:00");
 
-// WhatsApp group
 const WHATSAPP_GROUP =
   "https://chat.whatsapp.com/B5MYfUfGXzyDTHSAJ5m2mC?mode=gi_t";
 
-// Tutor WhatsApp
-const TUTOR_WHATSAPP =
-  "https://wa.me/2347033676641";
 
 // ============================================
-// DOM READY
+// SUPABASE
 // ============================================
 
-document.addEventListener("DOMContentLoaded", () => {
-
-  initializeCountdown();
-  initializeRegistrationButtons();
-  initializeRegistrationModal();
-  initializeWhatsAppLinks();
-
-});
+const supabaseClient =
+  window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_ANON_KEY
+  );
 
 
 // ============================================
-// REGISTRATION STATUS
+// INITIALIZE AFTER PAGE LOAD
 // ============================================
 
-function isRegistrationOpen() {
-  return Date.now() < REGISTRATION_DEADLINE;
-}
+function initializeSanaStyle() {
 
+  const countdown =
+    document.getElementById("countdown");
 
-// ============================================
-// COUNTDOWN
-// ============================================
+  const registerButtons =
+    [...document.querySelectorAll(
+      "[data-open-register]"
+    )];
 
-function initializeCountdown() {
+  const modal =
+    document.getElementById("registerModal");
 
-  const daysElement = document.getElementById("days");
-  const hoursElement = document.getElementById("hours");
-  const minutesElement = document.getElementById("minutes");
-  const secondsElement = document.getElementById("seconds");
+  const steps =
+    [...document.querySelectorAll(
+      ".modal-step"
+    )];
 
-  if (
-    !daysElement ||
-    !hoursElement ||
-    !minutesElement ||
-    !secondsElement
-  ) {
+  const dots =
+    [...document.querySelectorAll(
+      "[data-step-dot]"
+    )];
+
+  const receiptInput =
+    document.getElementById("receiptInput");
+
+  const submitReceipt =
+    document.getElementById("submitReceipt");
+
+  const uploadTitle =
+    document.getElementById("uploadTitle");
+
+  const uploadHint =
+    document.getElementById("uploadHint");
+
+  const uploadStatus =
+    document.getElementById("uploadStatus");
+
+  const fullName =
+    document.getElementById("fullName");
+
+  const whatsappNumber =
+    document.getElementById("whatsappNumber");
+
+  const emailAddress =
+    document.getElementById("emailAddress");
+
+  // ==========================================
+  // SAFETY CHECK
+  // ==========================================
+
+  if (!modal) {
+    console.error(
+      "SÀNA STYLES: registerModal was not found."
+    );
     return;
   }
 
+
+  // ==========================================
+  // REGISTRATION STATUS
+  // ==========================================
+
+  function isRegistrationOpen() {
+
+    return (
+      new Date() <
+      REGISTRATION_DEADLINE
+    );
+
+  }
+
+
+  // ==========================================
+  // COUNTDOWN
+  // ==========================================
+
   function updateCountdown() {
 
-    const remaining = REGISTRATION_DEADLINE - Date.now();
+    if (!countdown) {
+      return;
+    }
+
+    const remaining =
+      REGISTRATION_DEADLINE -
+      new Date();
 
     if (remaining <= 0) {
 
-      daysElement.textContent = "00";
-      hoursElement.textContent = "00";
-      minutesElement.textContent = "00";
-      secondsElement.textContent = "00";
+      countdown.innerHTML =
+        '<div class="closed-message">Registration is now closed.</div>';
 
-      document
-        .querySelectorAll("[data-open-register]")
-        .forEach(button => {
+      registerButtons.forEach(button => {
 
-          button.disabled = true;
-          button.classList.add("registration-closed");
+        button.disabled = true;
+        button.textContent =
+          "Registration closed";
 
-          const originalText =
-            button.dataset.originalText ||
-            button.textContent;
+        button.classList.add(
+          "is-disabled"
+        );
 
-          button.dataset.originalText = originalText;
-          button.textContent = "Registration Closed";
-
-        });
+      });
 
       return;
     }
 
     const totalSeconds =
-      Math.floor(remaining / 1000);
+      Math.floor(
+        remaining / 1000
+      );
 
     const days =
-      Math.floor(totalSeconds / 86400);
+      Math.floor(
+        totalSeconds / 86400
+      );
 
     const hours =
-      Math.floor((totalSeconds % 86400) / 3600);
+      Math.floor(
+        (totalSeconds % 86400) / 3600
+      );
 
     const minutes =
-      Math.floor((totalSeconds % 3600) / 60);
+      Math.floor(
+        (totalSeconds % 3600) / 60
+      );
 
     const seconds =
       totalSeconds % 60;
 
-    daysElement.textContent =
-      String(days).padStart(2, "0");
+    const daysElement =
+      document.getElementById("days");
 
-    hoursElement.textContent =
-      String(hours).padStart(2, "0");
+    const hoursElement =
+      document.getElementById("hours");
 
-    minutesElement.textContent =
-      String(minutes).padStart(2, "0");
+    const minutesElement =
+      document.getElementById("minutes");
 
-    secondsElement.textContent =
-      String(seconds).padStart(2, "0");
+    const secondsElement =
+      document.getElementById("seconds");
+
+    if (daysElement) {
+      daysElement.textContent =
+        String(days).padStart(2, "0");
+    }
+
+    if (hoursElement) {
+      hoursElement.textContent =
+        String(hours).padStart(2, "0");
+    }
+
+    if (minutesElement) {
+      minutesElement.textContent =
+        String(minutes).padStart(2, "0");
+    }
+
+    if (secondsElement) {
+      secondsElement.textContent =
+        String(seconds).padStart(2, "0");
+    }
+
   }
 
   updateCountdown();
 
-  setInterval(updateCountdown, 1000);
-}
+  setInterval(
+    updateCountdown,
+    1000
+  );
 
 
-// ============================================
-// REGISTRATION BUTTONS
-// ============================================
+  // ==========================================
+  // MODAL STEP CONTROL
+  // ==========================================
 
-function initializeRegistrationButtons() {
+  function showStep(number) {
 
-  const buttons =
-    document.querySelectorAll("[data-open-register]");
+    steps.forEach(step => {
 
-  buttons.forEach(button => {
-
-    button.addEventListener("click", event => {
-
-      event.preventDefault();
-
-      if (!isRegistrationOpen()) {
-
-        alert(
-          "Registration for this class has closed."
-        );
-
-        return;
-      }
-
-      openRegistrationModal();
-
-    });
-
-  });
-}
-
-
-// ============================================
-// MODAL
-// ============================================
-
-let currentStep = 1;
-
-function initializeRegistrationModal() {
-
-  const modal =
-    document.getElementById("registrationModal");
-
-  if (!modal) {
-    return;
-  }
-
-  // Close buttons
-  document
-    .querySelectorAll("[data-close-registration]")
-    .forEach(button => {
-
-      button.addEventListener("click", closeRegistrationModal);
-
-    });
-
-  // Click outside modal
-  modal.addEventListener("click", event => {
-
-    if (event.target === modal) {
-      closeRegistrationModal();
-    }
-
-  });
-
-  // Escape key
-  document.addEventListener("keydown", event => {
-
-    if (event.key === "Escape") {
-      closeRegistrationModal();
-    }
-
-  });
-
-  // Payment step
-  const paymentButton =
-    document.getElementById("paymentMadeButton");
-
-  if (paymentButton) {
-
-    paymentButton.addEventListener("click", () => {
-
-      currentStep = 2;
-      showRegistrationStep(2);
-
-    });
-
-  }
-
-  // Back button
-  const backButton =
-    document.getElementById("backToPayment");
-
-  if (backButton) {
-
-    backButton.addEventListener("click", () => {
-
-      currentStep = 1;
-      showRegistrationStep(1);
-
-    });
-
-  }
-
-  // Registration form
-  const form =
-    document.getElementById("registrationForm");
-
-  if (form) {
-
-    form.addEventListener(
-      "submit",
-      handleRegistrationSubmit
-    );
-
-  }
-
-  // Receipt input
-  const receiptInput =
-    document.getElementById("receipt");
-
-  if (receiptInput) {
-
-    receiptInput.addEventListener("change", () => {
-
-      const fileName =
-        document.getElementById("receiptFileName");
-
-      if (!fileName) {
-        return;
-      }
-
-      if (receiptInput.files.length > 0) {
-
-        fileName.textContent =
-          receiptInput.files[0].name;
-
-      } else {
-
-        fileName.textContent =
-          "No receipt selected";
-
-      }
-
-    });
-
-  }
-
-  showRegistrationStep(1);
-}
-
-
-// ============================================
-// OPEN / CLOSE MODAL
-// ============================================
-
-function openRegistrationModal() {
-
-  if (!isRegistrationOpen()) {
-    return;
-  }
-
-  const modal =
-    document.getElementById("registrationModal");
-
-  if (!modal) {
-    return;
-  }
-
-  modal.classList.add("active");
-  modal.setAttribute("aria-hidden", "false");
-
-  document.body.style.overflow = "hidden";
-
-  currentStep = 1;
-
-  showRegistrationStep(1);
-}
-
-
-function closeRegistrationModal() {
-
-  const modal =
-    document.getElementById("registrationModal");
-
-  if (!modal) {
-    return;
-  }
-
-  modal.classList.remove("active");
-  modal.setAttribute("aria-hidden", "true");
-
-  document.body.style.overflow = "";
-
-}
-
-
-// ============================================
-// SHOW REGISTRATION STEPS
-// ============================================
-
-function showRegistrationStep(step) {
-
-  currentStep = step;
-
-  document
-    .querySelectorAll("[data-registration-step]")
-    .forEach(element => {
-
-      const elementStep =
-        Number(
-          element.dataset.registrationStep
-        );
-
-      element.classList.toggle(
+      step.classList.toggle(
         "active",
-        elementStep === step
+        step.dataset.step ===
+        String(number)
       );
 
     });
 
-}
+    dots.forEach(dot => {
 
+      dot.classList.toggle(
+        "active",
+        dot.dataset.stepDot ===
+        String(number)
+      );
 
-// ============================================
-// COPY ACCOUNT NUMBER
-// ============================================
+    });
 
-document.addEventListener("click", event => {
+    const modalContent =
+      modal.querySelector(".modal");
 
-  const copyButton =
-    event.target.closest("[data-copy-account]");
+    if (modalContent) {
+      modalContent.scrollTop = 0;
+    }
 
-  if (!copyButton) {
-    return;
   }
 
-  const accountNumber =
-    "6141871365";
 
-  navigator.clipboard
-    .writeText(accountNumber)
-    .then(() => {
+  // ==========================================
+  // OPEN MODAL
+  // ==========================================
 
-      const originalText =
-        copyButton.textContent;
+  function openModal(event) {
 
-      copyButton.textContent =
-        "Copied ✓";
+    if (event) {
+      event.preventDefault();
+    }
 
-      setTimeout(() => {
-
-        copyButton.textContent =
-          originalText;
-
-      }, 2000);
-
-    })
-    .catch(() => {
+    if (!isRegistrationOpen()) {
 
       alert(
-        "Account number: 6141871365"
+        "Registration for this class has closed."
       );
 
-    });
-
-});
-
-
-// ============================================
-// REGISTRATION SUBMISSION
-// ============================================
-
-async function handleRegistrationSubmit(event) {
-
-  event.preventDefault();
-
-  const form = event.target;
-
-  if (!isRegistrationOpen()) {
-
-    showRegistrationError(
-      "Registration for this class has closed."
-    );
-
-    return;
-  }
-
-  const fullName =
-    document
-      .getElementById("fullName")
-      ?.value
-      .trim();
-
-  const whatsapp =
-    document
-      .getElementById("whatsapp")
-      ?.value
-      .trim();
-
-  const email =
-    document
-      .getElementById("email")
-      ?.value
-      .trim();
-
-  const receiptInput =
-    document.getElementById("receipt");
-
-  if (!fullName || fullName.length < 2) {
-
-    showRegistrationError(
-      "Please enter your full name."
-    );
-
-    return;
-  }
-
-  if (!whatsapp || whatsapp.length < 10) {
-
-    showRegistrationError(
-      "Please enter a valid WhatsApp number."
-    );
-
-    return;
-  }
-
-  if (
-    email &&
-    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
-  ) {
-
-    showRegistrationError(
-      "Please enter a valid email address."
-    );
-
-    return;
-  }
-
-  if (
-    !receiptInput ||
-    !receiptInput.files ||
-    receiptInput.files.length === 0
-  ) {
-
-    showRegistrationError(
-      "Please upload your payment receipt."
-    );
-
-    return;
-  }
-
-  const receiptFile =
-    receiptInput.files[0];
-
-  // Basic file protection
-  const allowedTypes = [
-    "image/jpeg",
-    "image/png",
-    "image/webp",
-    "application/pdf"
-  ];
-
-  if (!allowedTypes.includes(receiptFile.type)) {
-
-    showRegistrationError(
-      "Please upload a JPG, PNG, WEBP, or PDF receipt."
-    );
-
-    return;
-  }
-
-  // 5 MB maximum
-  if (receiptFile.size > 5 * 1024 * 1024) {
-
-    showRegistrationError(
-      "Your receipt must be smaller than 5MB."
-    );
-
-    return;
-  }
-
-  const submitButton =
-    form.querySelector(
-      'button[type="submit"]'
-    );
-
-  const originalButtonText =
-    submitButton
-      ? submitButton.textContent
-      : "";
-
-  if (submitButton) {
-
-    submitButton.disabled = true;
-    submitButton.textContent =
-      "Submitting...";
-
-  }
-
-  let receiptPath = null;
-
-  try {
-
-    // ========================================
-    // CREATE ID BEFORE INSERT
-    // ========================================
-
-    const registrationId =
-      crypto.randomUUID();
-
-    // ========================================
-    // CREATE SAFE FILE NAME
-    // ========================================
-
-    const extension =
-      getFileExtension(receiptFile.name);
-
-    const safeFileName =
-      `${registrationId}.${extension}`;
-
-    receiptPath =
-      `${registrationId}/${safeFileName}`;
-
-    // ========================================
-    // UPLOAD RECEIPT
-    // ========================================
-
-    const {
-      error: uploadError
-    } =
-      await supabaseClient
-        .storage
-        .from("payment-receipts")
-        .upload(
-          receiptPath,
-          receiptFile,
-          {
-            cacheControl: "3600",
-            upsert: false,
-            contentType: receiptFile.type
-          }
-        );
-
-    if (uploadError) {
-      throw uploadError;
+      return;
     }
 
-    // ========================================
-    // INSERT REGISTRATION
-    //
-    // IMPORTANT:
-    // NO .select()
-    // NO .single()
-    //
-    // This avoids requiring public SELECT
-    // permission on the registrations table.
-    // ========================================
+    modal.classList.add("open");
 
-    const {
-      error: registrationError
-    } =
-      await supabaseClient
-        .from("registrations")
-        .insert({
-          id: registrationId,
-          full_name: fullName,
-          whatsapp: whatsapp,
-          email: email || null,
-          receipt_path: receiptPath,
-          payment_status: "receipt_submitted"
-        });
+    modal.setAttribute(
+      "aria-hidden",
+      "false"
+    );
 
-    if (registrationError) {
-      throw registrationError;
+    document.body.style.overflow =
+      "hidden";
+
+    showStep(1);
+
+  }
+
+
+  // ==========================================
+  // CLOSE MODAL
+  // ==========================================
+
+  function closeModal() {
+
+    modal.classList.remove(
+      "open"
+    );
+
+    modal.setAttribute(
+      "aria-hidden",
+      "true"
+    );
+
+    document.body.style.overflow =
+      "";
+
+  }
+
+
+  // ==========================================
+  // REGISTRATION BUTTONS
+  // ==========================================
+
+  registerButtons.forEach(button => {
+
+    button.addEventListener(
+      "click",
+      openModal
+    );
+
+  });
+
+
+  // ==========================================
+  // CLOSE BUTTON
+  // ==========================================
+
+  const closeButton =
+    document.querySelector(
+      "[data-close-register]"
+    );
+
+  if (closeButton) {
+
+    closeButton.addEventListener(
+      "click",
+      closeModal
+    );
+
+  }
+
+
+  // ==========================================
+  // CLICK OUTSIDE MODAL
+  // ==========================================
+
+  modal.addEventListener(
+    "click",
+    event => {
+
+      if (
+        event.target === modal
+      ) {
+
+        closeModal();
+
+      }
+
     }
+  );
 
-    // ========================================
-    // SEND EMAIL NOTIFICATION
-    // ========================================
 
-    try {
+  // ==========================================
+  // ESC KEY
+  // ==========================================
 
-      await fetch(
-        NOTIFICATION_FUNCTION,
-        {
-          method: "POST",
+  document.addEventListener(
+    "keydown",
+    event => {
 
-          headers: {
-            "Content-Type":
-              "application/json"
-          },
+      if (
+        event.key === "Escape" &&
+        modal.classList.contains("open")
+      ) {
 
-          body: JSON.stringify({
-            full_name: fullName,
-            whatsapp: whatsapp,
-            email: email || "",
-            receipt_path: receiptPath,
-            registration_id: registrationId
-          })
+        closeModal();
+
+      }
+
+    }
+  );
+
+
+  // ==========================================
+  // NEXT STEP
+  // ==========================================
+
+  document
+    .querySelectorAll("[data-next]")
+    .forEach(button => {
+
+      button.addEventListener(
+        "click",
+        event => {
+
+          event.preventDefault();
+
+          showStep(
+            button.dataset.next
+          );
+
         }
       );
 
-    } catch (notificationError) {
+    });
 
-      // Do NOT fail the student's registration
-      // if the notification email fails.
 
-      console.error(
-        "Notification failed:",
-        notificationError
+  // ==========================================
+  // PREVIOUS STEP
+  // ==========================================
+
+  document
+    .querySelectorAll("[data-prev]")
+    .forEach(button => {
+
+      button.addEventListener(
+        "click",
+        event => {
+
+          event.preventDefault();
+
+          showStep(
+            button.dataset.prev
+          );
+
+        }
       );
 
-    }
+    });
 
-    // ========================================
-    // SUCCESS
-    // ========================================
 
-    currentStep = 3;
+  // ==========================================
+  // COPY ACCOUNT NUMBER
+  // ==========================================
 
-    showRegistrationStep(3);
-
-    form.reset();
-
-    const fileName =
-      document.getElementById(
-        "receiptFileName"
-      );
-
-    if (fileName) {
-
-      fileName.textContent =
-        "No receipt selected";
-
-    }
-
-  } catch (error) {
-
-    console.error(
-      "Registration error:",
-      error
+  const copyAccount =
+    document.getElementById(
+      "copyAccount"
     );
 
-    // ========================================
-    // CLEAN UP RECEIPT IF REGISTRATION FAILED
-    // ========================================
+  if (copyAccount) {
 
-    if (receiptPath) {
+    copyAccount.addEventListener(
+      "click",
+      async () => {
 
-      try {
+        const accountNumber =
+          document
+            .getElementById(
+              "accountNumber"
+            )
+            ?.textContent
+            .trim();
 
-        await supabaseClient
-          .storage
-          .from("payment-receipts")
-          .remove([receiptPath]);
+        try {
 
-      } catch (cleanupError) {
+          await navigator.clipboard.writeText(
+            accountNumber
+          );
 
-        console.error(
-          "Receipt cleanup failed:",
-          cleanupError
-        );
+          const original =
+            copyAccount.textContent;
+
+          copyAccount.textContent =
+            "Copied ✓";
+
+          setTimeout(() => {
+
+            copyAccount.textContent =
+              original;
+
+          }, 1500);
+
+        } catch {
+
+          alert(
+            "Account number: 6141871365"
+          );
+
+        }
 
       }
+    );
+
+  }
+
+
+  // ==========================================
+  // RECEIPT UPLOAD
+  // ==========================================
+
+  if (receiptInput) {
+
+    receiptInput.addEventListener(
+      "change",
+      () => {
+
+        const file =
+          receiptInput.files[0];
+
+        submitReceipt.disabled =
+          true;
+
+        uploadStatus.textContent =
+          "";
+
+        if (!file) {
+
+          uploadTitle.textContent =
+            "Choose receipt";
+
+          uploadHint.textContent =
+            "PNG, JPG, WEBP or PDF · max 10MB";
+
+          return;
+
+        }
+
+        const maximumSize =
+          10 * 1024 * 1024;
+
+        const allowedTypes = [
+          "image/png",
+          "image/jpeg",
+          "image/webp",
+          "application/pdf"
+        ];
+
+        if (
+          file.size >
+          maximumSize
+        ) {
+
+          receiptInput.value =
+            "";
+
+          uploadStatus.textContent =
+            "That file is larger than 10MB. Please choose a smaller receipt.";
+
+          return;
+
+        }
+
+        if (
+          !allowedTypes.includes(
+            file.type
+          )
+        ) {
+
+          receiptInput.value =
+            "";
+
+          uploadStatus.textContent =
+            "Please upload a PNG, JPG, WEBP or PDF receipt.";
+
+          return;
+
+        }
+
+        uploadTitle.textContent =
+          file.name;
+
+        uploadHint.textContent =
+          `${(
+            file.size /
+            1024 /
+            1024
+          ).toFixed(2)} MB · Ready to submit`;
+
+        uploadStatus.textContent =
+          "Receipt selected successfully.";
+
+        submitReceipt.disabled =
+          false;
+
+      }
+    );
+
+  }
+
+
+  // ==========================================
+  // VALIDATE STUDENT DETAILS
+  // ==========================================
+
+  function validateDetails() {
+
+    const name =
+      fullName.value.trim();
+
+    const phone =
+      whatsappNumber.value.trim();
+
+    const email =
+      emailAddress.value.trim();
+
+    if (name.length < 2) {
+
+      uploadStatus.textContent =
+        "Please enter your full name.";
+
+      fullName.focus();
+
+      return false;
 
     }
 
-    showRegistrationError(
-      "We couldn't submit your registration. Please check your connection and try again, or contact Hassanat on WhatsApp."
-    );
+    if (
+      phone.replace(
+        /\D/g,
+        ""
+      ).length < 10
+    ) {
 
-  } finally {
+      uploadStatus.textContent =
+        "Please enter a valid WhatsApp number.";
 
-    if (submitButton) {
+      whatsappNumber.focus();
 
-      submitButton.disabled = false;
-      submitButton.textContent =
-        originalButtonText;
+      return false;
 
     }
 
+    if (
+      email &&
+      !/^\S+@\S+\.\S+$/.test(email)
+    ) {
+
+      uploadStatus.textContent =
+        "Please enter a valid email address or leave it blank.";
+
+      emailAddress.focus();
+
+      return false;
+
+    }
+
+    return true;
+
   }
-}
 
 
-// ============================================
-// ERROR MESSAGE
-// ============================================
+  // ==========================================
+  // SUBMIT REGISTRATION
+  // ==========================================
 
-function showRegistrationError(message) {
+  if (submitReceipt) {
 
-  const errorElement =
-    document.getElementById(
-      "registrationError"
+    submitReceipt.addEventListener(
+      "click",
+      async () => {
+
+        if (!isRegistrationOpen()) {
+
+          uploadStatus.textContent =
+            "Registration has closed. Thank you for your interest in SÀNA STYLE.";
+
+          submitReceipt.disabled =
+            true;
+
+          return;
+
+        }
+
+        if (!validateDetails()) {
+          return;
+        }
+
+        const file =
+          receiptInput.files[0];
+
+        if (!file) {
+
+          uploadStatus.textContent =
+            "Please choose your payment receipt.";
+
+          return;
+
+        }
+
+        const originalText =
+          submitReceipt.textContent;
+
+        submitReceipt.disabled =
+          true;
+
+        submitReceipt.textContent =
+          "Submitting…";
+
+        uploadStatus.textContent =
+          "Uploading your receipt securely…";
+
+
+        // ====================================
+        // CREATE UNIQUE REGISTRATION ID
+        // ====================================
+
+        const registrationId =
+          crypto.randomUUID
+            ? crypto.randomUUID()
+            : `${Date.now()}-${Math.random()
+                .toString(36)
+                .slice(2)}`;
+
+
+        // ====================================
+        // SAFE FILE NAME
+        // ====================================
+
+        const extension =
+          (
+            file.name
+              .split(".")
+              .pop() ||
+            "file"
+          )
+            .toLowerCase()
+            .replace(
+              /[^a-z0-9]/g,
+              ""
+            );
+
+        const safeName =
+          fullName.value
+            .trim()
+            .toLowerCase()
+            .replace(
+              /[^a-z0-9]+/g,
+              "-"
+            )
+            .replace(
+              /^-|-$/g,
+              ""
+            )
+            .slice(
+              0,
+              50
+            ) ||
+          "student";
+
+        const receiptPath =
+          `receipts/${registrationId}-${safeName}.${extension}`;
+
+
+        try {
+
+          // ==================================
+          // 1. UPLOAD RECEIPT
+          // ==================================
+
+          const {
+            error: uploadError
+          } =
+            await supabaseClient
+              .storage
+              .from(
+                "payment-receipts"
+              )
+              .upload(
+                receiptPath,
+                file,
+                {
+                  contentType:
+                    file.type,
+
+                  upsert:
+                    false
+                }
+              );
+
+          if (uploadError) {
+
+            throw new Error(
+              uploadError.message ||
+              "Receipt upload failed."
+            );
+
+          }
+
+
+          // ==================================
+          // 2. SAVE REGISTRATION
+          //
+          // IMPORTANT:
+          // NO .select()
+          // NO .single()
+          // ==================================
+
+          const {
+            error: insertError
+          } =
+            await supabaseClient
+              .from(
+                "registrations"
+              )
+              .insert({
+                id:
+                  registrationId,
+
+                full_name:
+                  fullName.value.trim(),
+
+                whatsapp:
+                  whatsappNumber.value.trim(),
+
+                email:
+                  emailAddress.value.trim() ||
+                  null,
+
+                receipt_path:
+                  receiptPath,
+
+                payment_status:
+                  "receipt_submitted"
+              });
+
+
+          if (insertError) {
+
+            // Delete uploaded receipt
+            // if database insert fails.
+
+            await supabaseClient
+              .storage
+              .from(
+                "payment-receipts"
+              )
+              .remove([
+                receiptPath
+              ]);
+
+            throw new Error(
+              insertError.message ||
+              "Registration could not be saved."
+            );
+
+          }
+
+
+          // ==================================
+          // 3. SEND EMAIL NOTIFICATION
+          // ==================================
+
+          try {
+
+            const notificationResponse =
+              await fetch(
+                NOTIFICATION_FUNCTION,
+                {
+                  method:
+                    "POST",
+
+                  headers: {
+                    "Content-Type":
+                      "application/json"
+                  },
+
+                  body:
+                    JSON.stringify({
+                      full_name:
+                        fullName.value.trim(),
+
+                      whatsapp:
+                        whatsappNumber.value.trim(),
+
+                      email:
+                        emailAddress.value.trim() ||
+                        "",
+
+                      receipt_path:
+                        receiptPath,
+
+                      registration_id:
+                        registrationId
+                    })
+                }
+              );
+
+            if (
+              !notificationResponse.ok
+            ) {
+
+              console.error(
+                "Notification returned an error:",
+                await notificationResponse.text()
+              );
+
+            }
+
+          } catch (
+            notificationError
+          ) {
+
+            // Email failure must NOT
+            // cancel a successful registration.
+
+            console.error(
+              "Email notification failed:",
+              notificationError
+            );
+
+          }
+
+
+          // ==================================
+          // 4. SUCCESS
+          // ==================================
+
+          uploadStatus.textContent =
+            "Registration submitted successfully.";
+
+          showStep(3);
+
+          // Reset form
+          fullName.value = "";
+          whatsappNumber.value = "";
+          emailAddress.value = "";
+          receiptInput.value = "";
+
+          uploadTitle.textContent =
+            "Choose receipt";
+
+          uploadHint.textContent =
+            "PNG, JPG, WEBP or PDF · max 10MB";
+
+          submitReceipt.disabled =
+            true;
+
+          submitReceipt.textContent =
+            originalText;
+
+
+        } catch (error) {
+
+          console.error(
+            "SÀNA STYLE registration error:",
+            error
+          );
+
+          uploadStatus.textContent =
+            "We couldn't submit your registration. Please check your connection and try again, or contact Hassanat on WhatsApp.";
+
+          submitReceipt.disabled =
+            false;
+
+          submitReceipt.textContent =
+            originalText;
+
+        }
+
+      }
     );
 
-  if (errorElement) {
-
-    errorElement.textContent =
-      message;
-
-    errorElement.classList.add(
-      "visible"
-    );
-
-    errorElement.scrollIntoView({
-      behavior: "smooth",
-      block: "center"
-    });
-
-    return;
   }
 
-  alert(message);
-}
 
-
-// ============================================
-// FILE EXTENSION
-// ============================================
-
-function getFileExtension(filename) {
-
-  const parts =
-    filename.split(".");
-
-  if (parts.length < 2) {
-    return "file";
-  }
-
-  return parts
-    .pop()
-    .toLowerCase()
-    .replace(/[^a-z0-9]/g, "");
-}
-
-
-// ============================================
-// WHATSAPP LINKS
-// ============================================
-
-function initializeWhatsAppLinks() {
+  // ==========================================
+  // CLOSE MODAL WHEN INTERNAL ANCHOR CLICKED
+  // ==========================================
 
   document
     .querySelectorAll(
-      '[data-whatsapp-tutor]'
+      'a[href^="#"]'
     )
-    .forEach(link => {
+    .forEach(anchor => {
 
-      link.href = TUTOR_WHATSAPP;
+      anchor.addEventListener(
+        "click",
+        () => {
 
-      link.target = "_blank";
-      link.rel = "noopener";
+          if (
+            !anchor.closest(
+              "#registerModal"
+            )
+          ) {
+
+            closeModal();
+
+          }
+
+        }
+      );
 
     });
 
+}
 
-  document
-    .querySelectorAll(
-      '[data-whatsapp-group]'
-    )
-    .forEach(link => {
 
-      link.href = WHATSAPP_GROUP;
+// ============================================
+// START
+// ============================================
 
-      link.target = "_blank";
-      link.rel = "noopener";
+// This handles BOTH cases:
+// - script loaded before DOM is ready
+// - script loaded after DOM is ready
 
-    });
+if (
+  document.readyState === "loading"
+) {
+
+  document.addEventListener(
+    "DOMContentLoaded",
+    initializeSanaStyle
+  );
+
+} else {
+
+  initializeSanaStyle();
 
 }
